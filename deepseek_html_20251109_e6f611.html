@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>(a+b)^6 → 64 Quẻ Kinh Dịch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#1e40af',
+                        'secondary': '#dc2626',
+                        'accent': '#059669'
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .line { width: 90px; height: 5px; margin: 2px auto; background-color: black; }
+        .broken { display: flex; justify-content: space-between; }
+        .broken::before, .broken::after { 
+            content: ""; 
+            display: inline-block; 
+            width: 40px; 
+            height: 5px; 
+            background-color: black; 
+        }
+        .hexagram { 
+            transition: all 0.3s ease; 
+            cursor: pointer;
+        }
+        .hexagram:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .gua-name { font-family: 'Times New Roman', serif; }
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 1rem; 
+        }
+        .selected { 
+            background-color: #e0f2fe; 
+            border: 2px solid #0ea5e9;
+        }
+        .filter-btn.active {
+            background-color: #1e40af;
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-800 min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold mb-3 text-primary">Khai triển không giao hoán (a+b)<sup>6</sup> và 64 Quẻ Kinh Dịch</h1>
+            <p class="text-gray-700 mb-6 max-w-3xl mx-auto">
+                Mỗi chuỗi trong khai triển \((a+b)^6\) tương ứng với một quẻ gồm 6 hào.  
+                Gán <b>a = nét liền</b> (⚊, Dương) và <b>b = nét đứt</b> (⚋, Âm), ta thu được <b>64 quẻ Kinh Dịch</b>.  
+                (Đọc các hào từ dưới lên trên.)
+            </p>
+            
+            <div class="flex flex-wrap justify-center gap-2 mb-6">
+                <button class="filter-btn px-3 py-1 bg-white border border-gray-300 rounded-lg hover:bg-gray-50" data-filter="all">Tất cả</button>
+                <button class="filter-btn px-3 py-1 bg-white border border-gray-300 rounded-lg hover:bg-gray-50" data-filter="yang">Dương chủ</button>
+                <button class="filter-btn px-3 py-1 bg-white border border-gray-300 rounded-lg hover:bg-gray-50" data-filter="yin">Âm chủ</button>
+                <button class="filter-btn px-3 py-1 bg-white border border-gray-300 rounded-lg hover:bg-gray-50" data-filter="balanced">Cân bằng</button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6 max-w-2xl mx-auto">
+                <h2 class="text-lg font-semibold mb-2 text-secondary">Tìm kiếm quẻ</h2>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="search-input" placeholder="Nhập tên quẻ hoặc mã nhị phân..." class="flex-grow px-3 py-2 border border-gray-300 rounded-lg">
+                    <button id="search-btn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">Tìm kiếm</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="mb-10">
+            <div id="hexagram-container" class="grid-container"></div>
+        </main>
+
+        <footer class="text-center text-gray-600 text-sm mt-8">
+            <p>Minh họa mối liên hệ giữa Đại số và Kinh Dịch - 64 Quẻ</p>
+        </footer>
+    </div>
+
+    <!-- Modal hiển thị chi tiết quẻ -->
+    <div id="hexagram-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-primary"></h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div id="modal-content" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        // Danh sách đầy đủ 64 quẻ Kinh Dịch với thông tin chi tiết
+        const hexagrams = [
+            { id: 1, name: "Càn", chinese: "乾", binary: "111111", description: "Trời, sáng tạo, mạnh mẽ", attribute: "Cương kiện", nature: "yang" },
+            { id: 2, name: "Khôn", chinese: "坤", binary: "000000", description: "Đất, tiếp nhận, thuận theo", attribute: "Nhu thuận", nature: "yin" },
+            { id: 3, name: "Thủy Lôi Truân", chinese: "屯", binary: "010001", description: "Khởi đầu khó khăn", attribute: "Sơ nan", nature: "yang" },
+            { id: 4, name: "Sơn Thủy Mông", chinese: "蒙", binary: "100010", description: "Non trẻ, cần dạy dỗ", attribute: "Sơ mông", nature: "yin" },
+            { id: 5, name: "Thủy Thiên Nhu", chinese: "需", binary: "010111", description: "Chờ đợi, kiên nhẫn", attribute: "Nhu đãi", nature: "yang" },
+            { id: 6, name: "Thiên Thủy Tụng", chinese: "讼", binary: "111010", description: "Tranh chấp, kiện tụng", attribute: "Tụng tranh", nature: "yang" },
+            { id: 7, name: "Địa Thủy Sư", chinese: "师", binary: "000010", description: "Quân đội, đám đông", attribute: "Sư chúng", nature: "yin" },
+            { id: 8, name: "Thủy Địa Tỷ", chinese: "比", binary: "010000", description: "Hợp tác, thân cận", attribute: "Tỷ phụ", nature: "yin" },
+            { id: 9, name: "Phong Thiên Tiểu Súc", chinese: "小畜", binary: "110111", description: "Tích lũy nhỏ", attribute: "Tiểu súc", nature: "yang" },
+            { id: 10, name: "Thiên Trạch Lý", chinese: "履", binary: "111011", description: "Cư xử, bước đi", attribute: "Lý lễ", nature: "yang" },
+            { id: 11, name: "Địa Thiên Thái", chinese: "泰", binary: "000111", description: "Hòa hợp, thông suốt", attribute: "Thái bình", nature: "balanced" },
+            { id: 12, name: "Thiên Địa Bĩ", chinese: "否", binary: "111000", description: "Trở ngại, bế tắc", attribute: "Bĩ tắc", nature: "balanced" },
+            { id: 13, name: "Thiên Hỏa Đồng Nhân", chinese: "同人", binary: "111101", description: "Cùng chí hướng", attribute: "Đồng nhân", nature: "yang" },
+            { id: 14, name: "Hỏa Thiên Đại Hữu", chinese: "大有", binary: "101111", description: "Giàu có lớn", attribute: "Đại hữu", nature: "yang" },
+            { id: 15, name: "Địa Sơn Khiêm", chinese: "谦", binary: "000100", description: "Khiêm tốn", attribute: "Khiêm nhường", nature: "yin" },
+            { id: 16, name: "Lôi Địa Dự", chinese: "豫", binary: "001000", description: "Vui vẻ, dự báo", attribute: "Dự lạc", nature: "yin" },
+            { id: 17, name: "Trạch Lôi Tùy", chinese: "随", binary: "011001", description: "Tùy theo, thuận theo", attribute: "Tùy thuận", nature: "yang" },
+            { id: 18, name: "Sơn Phong Cổ", chinese: "蛊", binary: "100110", description: "Cải cách, sửa chữa", attribute: "Cổ sự", nature: "yin" },
+            { id: 19, name: "Địa Trạch Lâm", chinese: "临", binary: "000011", description: "Tiến đến, quan sát", attribute: "Lâm quan", nature: "yin" },
+            { id: 20, name: "Phong Địa Quan", chinese: "观", binary: "110000", description: "Quan sát, chiêm nghiệm", attribute: "Quan sát", nature: "yin" },
+            { id: 21, name: "Hỏa Lôi Phệ Hạp", chinese: "噬嗑", binary: "101001", description: "Cắn xé, giải quyết", attribute: "Phệ hạp", nature: "yang" },
+            { id: 22, name: "Sơn Hỏa Bí", chinese: "贲", binary: "100101", description: "Trang trí, văn vẻ", attribute: "Bí sức", nature: "yin" },
+            { id: 23, name: "Sơn Địa Bác", chinese: "剥", binary: "100000", description: "Bóc lột, suy thoái", attribute: "Bác lạc", nature: "yin" },
+            { id: 24, name: "Địa Lôi Phục", chinese: "复", binary: "000001", description: "Trở lại, phục hồi", attribute: "Phục hồi", nature: "yin" },
+            { id: 25, name: "Thiên Lôi Vô Vọng", chinese: "无妄", binary: "111001", description: "Vô tội, không mong cầu", attribute: "Vô vọng", nature: "yang" },
+            { id: 26, name: "Sơn Thiên Đại Súc", chinese: "大畜", binary: "100111", description: "Tích lũy lớn", attribute: "Đại súc", nature: "yang" },
+            { id: 27, name: "Sơn Lôi Di", chinese: "颐", binary: "100001", description: "Nuôi dưỡng", attribute: "Di dưỡng", nature: "yin" },
+            { id: 28, name: "Trạch Phong Đại Quá", chinese: "大过", binary: "011110", description: "Quá độ lớn", attribute: "Đại quá", nature: "yang" },
+            { id: 29, name: "Thuần Khảm", chinese: "坎", binary: "010010", description: "Hiểm trở, nước", attribute: "Hiểm", nature: "yin" },
+            { id: 30, name: "Thuần Ly", chinese: "离", binary: "101101", description: "Bám víu, lửa", attribute: "Lệ", nature: "yang" },
+            { id: 31, name: "Trạch Sơn Hàm", chinese: "咸", binary: "011100", description: "Cảm ứng, ảnh hưởng", attribute: "Hàm cảm", nature: "yang" },
+            { id: 32, name: "Lôi Phong Hằng", chinese: "恒", binary: "001110", description: "Kiên định, bền vững", attribute: "Hằng cửu", nature: "yang" },
+            { id: 33, name: "Thiên Sơn Độn", chinese: "遁", binary: "111100", description: "Lánh xa, ẩn dật", attribute: "Độn ẩn", nature: "yang" },
+            { id: 34, name: "Lôi Thiên Đại Tráng", chinese: "大壮", binary: "001111", description: "Sức mạnh lớn", attribute: "Đại tráng", nature: "yang" },
+            { id: 35, name: "Hỏa Địa Tấn", chinese: "晋", binary: "101000", description: "Tiến bộ, thăng tiến", attribute: "Tấn tiến", nature: "yin" },
+            { id: 36, name: "Địa Hỏa Minh Di", chinese: "明夷", binary: "000101", description: "Tổn thương, ánh sáng bị che", attribute: "Minh di", nature: "yin" },
+            { id: 37, name: "Phong Hỏa Gia Nhân", chinese: "家人", binary: "110101", description: "Gia đình", attribute: "Gia nhân", nature: "yin" },
+            { id: 38, name: "Hỏa Trạch Khuê", chinese: "睽", binary: "101011", description: "Xung đột, trái ngược", attribute: "Khuê ly", nature: "yang" },
+            { id: 39, name: "Thủy Sơn Kiển", chinese: "蹇", binary: "010100", description: "Khó khăn, trở ngại", attribute: "Kiển nan", nature: "yin" },
+            { id: 40, name: "Lôi Thủy Giải", chinese: "解", binary: "001010", description: "Giải quyết, cởi mở", attribute: "Giải thoát", nature: "yang" },
+            { id: 41, name: "Sơn Trạch Tổn", chinese: "损", binary: "100011", description: "Tổn thất, giảm bớt", attribute: "Tổn giảm", nature: "yin" },
+            { id: 42, name: "Phong Lôi Ích", chinese: "益", binary: "110001", description: "Lợi ích, tăng thêm", attribute: "Ích lợi", nature: "yang" },
+            { id: 43, name: "Trạch Thiên Quải", chinese: "夬", binary: "011111", description: "Quyết đoán, cắt đứt", attribute: "Quải quyết", nature: "yang" },
+            { id: 44, name: "Thiên Phong Cấu", chinese: "姤", binary: "111110", description: "Gặp gỡ, tương ngộ", attribute: "Cấu ngộ", nature: "yang" },
+            { id: 45, name: "Trạch Địa Tụy", chinese: "萃", binary: "011000", description: "Tập hợp, tụ hội", attribute: "Tụy tập", nature: "yin" },
+            { id: 46, name: "Địa Phong Thăng", chinese: "升", binary: "000110", description: "Thăng tiến, vươn lên", attribute: "Thăng tiến", nature: "yin" },
+            { id: 47, name: "Trạch Thủy Khốn", chinese: "困", binary: "011010", description: "Khốn đốn, bế tắc", attribute: "Khốn đốn", nature: "yang" },
+            { id: 48, name: "Thủy Phong Tỉnh", chinese: "井", binary: "010110", description: "Giếng nước, nguồn sống", attribute: "Tỉnh dưỡng", nature: "yin" },
+            { id: 49, name: "Trạch Hỏa Cách", chinese: "革", binary: "011101", description: "Cách mạng, thay đổi", attribute: "Cách tân", nature: "yang" },
+            { id: 50, name: "Hỏa Phong Đỉnh", chinese: "鼎", binary: "101110", description: "Cái vạc, ổn định", attribute: "Đỉnh định", nature: "yang" },
+            { id: 51, name: "Thuần Chấn", chinese: "震", binary: "001001", description: "Sấm sét, chấn động", attribute: "Chấn động", nature: "yang" },
+            { id: 52, name: "Thuần Cấn", chinese: "艮", binary: "100100", description: "Núi, dừng lại", attribute: "Cấn chỉ", nature: "yin" },
+            { id: 53, name: "Phong Sơn Tiệm", chinese: "渐", binary: "110100", description: "Tiệm tiến, dần dần", attribute: "Tiệm tiến", nature: "yin" },
+            { id: 54, name: "Lôi Trạch Quy Muội", chinese: "归妹", binary: "001011", description: "Gả em gái, kết hôn", attribute: "Quy muội", nature: "yang" },
+            { id: 55, name: "Lôi Hỏa Phong", chinese: "丰", binary: "001101", description: "Phong phú, thịnh vượng", attribute: "Phong thịnh", nature: "yang" },
+            { id: 56, name: "Hỏa Sơn Lữ", chinese: "旅", binary: "101100", description: "Du lịch, xa nhà", attribute: "Lữ hành", nature: "yin" },
+            { id: 57, name: "Thuần Tốn", chinese: "巽", binary: "110110", description: "Gió, thâm nhập", attribute: "Tốn nhập", nature: "yin" },
+            { id: 58, name: "Thuần Đoài", chinese: "兑", binary: "011011", description: "Đầm, vui vẻ", attribute: "Đoài duyệt", nature: "yang" },
+            { id: 59, name: "Phong Thủy Hoán", chinese: "涣", binary: "110010", description: "Phân tán, giải tán", attribute: "Hoán tán", nature: "yin" },
+            { id: 60, name: "Thủy Trạch Tiết", chinese: "节", binary: "010011", description: "Tiết chế, điều độ", attribute: "Tiết chế", nature: "yang" },
+            { id: 61, name: "Phong Trạch Trung Phu", chinese: "中孚", binary: "110011", description: "Thành tín ở trong", attribute: "Trung phu", nature: "yin" },
+            { id: 62, name: "Lôi Sơn Tiểu Quá", chinese: "小过", binary: "001100", description: "Quá độ nhỏ", attribute: "Tiểu quá", nature: "yin" },
+            { id: 63, name: "Thủy Hỏa Ký Tế", chinese: "既济", binary: "010101", description: "Đã hoàn thành", attribute: "Ký tế", nature: "balanced" },
+            { id: 64, name: "Hỏa Thủy Vị Tế", chinese: "未济", binary: "101010", description: "Chưa hoàn thành", attribute: "Vị tế", nature: "balanced" }
+        ];
+
+        const container = document.getElementById('hexagram-container');
+        const modal = document.getElementById('hexagram-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+        const closeModal = document.getElementById('close-modal');
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        // Tạo mã code từ binary (thay 1 bằng a, 0 bằng b)
+        function binaryToCode(binary) {
+            return binary.split('').map(bit => bit === '1' ? 'a' : 'b').join('');
+        }
+
+        // Hiển thị tất cả quẻ
+        function renderHexagrams(filter = 'all', searchTerm = '') {
+            container.innerHTML = '';
+            
+            const filteredHexagrams = hexagrams.filter(hexagram => {
+                const matchesFilter = filter === 'all' || hexagram.nature === filter;
+                const matchesSearch = searchTerm === '' || 
+                    hexagram.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    hexagram.chinese.includes(searchTerm) ||
+                    hexagram.binary.includes(searchTerm) ||
+                    hexagram.description.toLowerCase().includes(searchTerm.toLowerCase());
+                
+                return matchesFilter && matchesSearch;
+            });
+            
+            filteredHexagrams.forEach(hexagram => {
+                const div = document.createElement('div');
+                div.className = "hexagram bg-white shadow-md p-3 rounded-lg text-center";
+                div.dataset.id = hexagram.id;
+                
+                const code = binaryToCode(hexagram.binary);
+                const lines = [...code].reverse().map(c =>
+                    `<div class="${c === 'a' ? 'line' : 'broken'}"></div>`
+                ).join('');
+                
+                div.innerHTML = `
+                    <div class="mb-1">${lines}</div>
+                    <p class="font-semibold gua-name">${hexagram.name}</p>
+                    <p class="text-xs text-gray-500">${hexagram.chinese}</p>
+                    <p class="text-xs text-gray-400">${hexagram.binary}</p>
+                `;
+                
+                div.addEventListener('click', () => showHexagramDetails(hexagram));
+                container.appendChild(div);
+            });
+            
+            // Hiển thị thông báo nếu không tìm thấy kết quả
+            if (filteredHexagrams.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <p class="text-lg">Không tìm thấy quẻ nào phù hợp</p>
+                        <p class="text-sm">Hãy thử tìm kiếm với từ khóa khác</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Hiển thị chi tiết quẻ trong modal
+        function showHexagramDetails(hexagram) {
+            modalTitle.textContent = `${hexagram.id}. ${hexagram.name} (${hexagram.chinese})`;
+            
+            const code = binaryToCode(hexagram.binary);
+            const lines = [...code].reverse().map(c =>
+                `<div class="${c === 'a' ? 'line' : 'broken'}"></div>`
+            ).join('');
+            
+            modalContent.innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="mb-2">${lines}</div>
+                    <p class="text-sm text-gray-600">Mã nhị phân: ${hexagram.binary}</p>
+                    <p class="text-sm text-gray-600">Chuỗi a/b: ${code}</p>
+                </div>
+                <div class="space-y-2">
+                    <p><span class="font-semibold">Ý nghĩa:</span> ${hexagram.description}</p>
+                    <p><span class="font-semibold">Thuộc tính:</span> ${hexagram.attribute}</p>
+                    <p><span class="font-semibold">Tính chất:</span> ${hexagram.nature === 'yang' ? 'Dương chủ' : hexagram.nature === 'yin' ? 'Âm chủ' : 'Cân bằng'}</p>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Đóng modal
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        // Tìm kiếm quẻ
+        searchBtn.addEventListener('click', () => {
+            const searchTerm = searchInput.value.trim();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            renderHexagrams(activeFilter, searchTerm);
+        });
+
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                const searchTerm = searchInput.value.trim();
+                const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+                renderHexagrams(activeFilter, searchTerm);
+            }
+        });
+
+        // Lọc quẻ theo tính chất
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const filter = btn.dataset.filter;
+                const searchTerm = searchInput.value.trim();
+                renderHexagrams(filter, searchTerm);
+            });
+        });
+
+        // Khởi tạo
+        filterBtns[0].classList.add('active');
+        renderHexagrams();
+    </script>
+</body>
+</html>
