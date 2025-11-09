@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>(a+b)^3 – Bát quái & Nhị thức Pascal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#1e40af',
+                        'secondary': '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .line { width: 100px; height: 6px; margin: 3px auto; background-color: black; }
+        .broken { display: flex; justify-content: space-between; }
+        .broken::before, .broken::after { 
+            content: ""; 
+            display: inline-block; 
+            width: 45px; 
+            height: 6px; 
+            background-color: black; 
+        }
+        .trigram { 
+            transition: all 0.3s ease; 
+            cursor: pointer;
+        }
+        .trigram:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .gua-name { font-family: 'Times New Roman', serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-800 min-h-screen flex flex-col items-center py-8 px-4">
+    <div class="max-w-4xl w-full">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold mb-3 text-primary">(a + b)<sup>3</sup> — Liên hệ Nhị thức Pascal và Bát quái</h1>
+            <p class="text-lg text-gray-700 max-w-2xl mx-auto">
+                Biểu thức không giao hoán \((a+b)^3\) tạo ra 8 chuỗi: aaa, aab, aba, baa, bba, bab, abb, bbb.  
+                Nếu gán a = nét liền (1), b = nét đứt (0), ta thu được 8 quẻ Bát quái.
+            </p>
+        </header>
+
+        <main class="mb-12">
+            <section class="mb-10">
+                <h2 class="text-2xl font-semibold mb-5 text-center text-primary">Bát Quái</h2>
+                <div id="gua-container" class="grid grid-cols-2 sm:grid-cols-4 gap-6"></div>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-2xl font-semibold mb-4 text-center text-secondary">Phân phối nhị thức giao hoán</h2>
+                <div class="text-center mb-6">
+                    <p class="text-xl mb-2">\[(a+b)^3 = a^3 + 3a^2b + 3ab^2 + b^3\]</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div class="p-3 bg-blue-50 rounded-lg">
+                        <p class="font-bold text-lg">C(3,0) = 1</p>
+                        <p class="text-gray-600">\(a^3\)</p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <p class="font-bold text-lg">C(3,1) = 3</p>
+                        <p class="text-gray-600">\(3a^2b\)</p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <p class="font-bold text-lg">C(3,2) = 3</p>
+                        <p class="text-gray-600">\(3ab^2\)</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-lg">
+                        <p class="font-bold text-lg">C(3,3) = 1</p>
+                        <p class="text-gray-600">\(b^3\)</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center text-gray-600 text-sm mt-8">
+            <p>Minh họa mối liên hệ giữa Đại số và Kinh Dịch</p>
+        </footer>
+    </div>
+
+    <script>
+        // Sắp xếp theo thứ tự bát quái truyền thống (từ Càn đến Khôn)
+        const trigrams = [
+            { code: 'aaa', name: 'Càn ☰', binary: '111', description: 'Trời, sáng tạo' },
+            { code: 'aab', name: 'Đoài ☱', binary: '110', description: 'Đầm, vui vẻ' },
+            { code: 'aba', name: 'Ly ☲', binary: '101', description: 'Lửa, bám víu' },
+            { code: 'abb', name: 'Chấn ☳', binary: '100', description: 'Sấm, kích động' },
+            { code: 'baa', name: 'Tốn ☴', binary: '011', description: 'Gió, thâm nhập' },
+            { code: 'bab', name: 'Khảm ☵', binary: '010', description: 'Nước, hiểm nguy' },
+            { code: 'bba', name: 'Cấn ☶', binary: '001', description: 'Núi, tĩnh lặng' },
+            { code: 'bbb', name: 'Khôn ☷', binary: '000', description: 'Đất, tiếp nhận' }
+        ];
+
+        const container = document.getElementById('gua-container');
+
+        trigrams.forEach(t => {
+            const trigramDiv = document.createElement('div');
+            trigramDiv.className = "trigram bg-white shadow-md p-4 rounded-xl text-center flex flex-col justify-between";
+            trigramDiv.innerHTML = `
+                <div class="mb-3">
+                    ${[...t.code].map(c => 
+                        `<div class="${c==='a' ? 'line' : 'broken'}"></div>`
+                    ).join('')}
+                </div>
+                <div>
+                    <p class="font-semibold text-lg gua-name mb-1">${t.name}</p>
+                    <p class="text-sm text-gray-600 mb-1">${t.binary}</p>
+                    <p class="text-xs text-gray-500 mb-1">${t.code}</p>
+                    <p class="text-xs text-gray-400 italic">${t.description}</p>
+                </div>
+            `;
+            container.appendChild(trigramDiv);
+        });
+
+        // Đảm bảo MathJax render lại sau khi nội dung được tải
+        if (window.MathJax) {
+            window.MathJax.typesetPromise();
+        }
+    </script>
+</body>
+</html>
